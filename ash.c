@@ -1197,8 +1197,9 @@ static struct strlist *cmdenviron;     /* environment for builtin command */
 static uint8_t exitstatus;             /* exit status of last command */
 
 char twig_path[PATH_MAX+1];
-char* pillow_up_cmd[] = {twig_path, "up", NULL};
-char* pillow_down_cmd[] = {twig_path, "down", NULL};
+char* cushion_install_cmd[] = {twig_path, "install", NULL};
+char* cushion_up_cmd[] = {twig_path, "up", NULL};
+char* cushion_down_cmd[] = {twig_path, "down", NULL};
 
 /* ============ Message printing */
 
@@ -13218,10 +13219,21 @@ int main(int argc, char **argv)
 	}
 	else if (minusg) {
 		setpwd(minusg, 0);
-		sprintf(twig_path, "%s/twigs/default.twig", minusg);
+		sprintf(twig_path, "%s/app.twig", minusg);
 		setinputfile(twig_path, 0);
 		shellparam.nparam = 1;
-		shellparam.p = pillow_up_cmd;		
+		
+		if( access( "/etc/profile.d/cushion.sh", F_OK ) != -1 ) {
+			// file exist - the cushion has 
+			// already been installed
+			shellparam.p = cushion_up_cmd;
+			setvar0("NEST_OPERATION", "up");
+		} else {
+			// file doesn't exist - need to install first
+			shellparam.p = cushion_install_cmd;
+			setvar0("NEST_OPERATION", "install");
+		}	
+	
 		arg0 = twig_path;
 		commandname = arg0;
 	}
@@ -13297,7 +13309,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	FILE *f = NULL;
 
 	if (!home) {
-		home = "/var/www";
+		home = "/var/app";
 		setvar0("NEST_HOME", home);
 	}
 
@@ -13308,20 +13320,20 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		/* This aborts if file can't be opened, which is POSIXly correct.
 		 * bash returns exitcode 1 instead.
 		 */
- 		sprintf(twig_path, "%s/twigs/default.twig", home);
+ 		sprintf(twig_path, "%s/app.twig", home);
 		setinputfile(twig_path, INPUT_PUSH_FILE);
 		shellparam.nparam = 1;
-		shellparam.p = pillow_up_cmd;
+		shellparam.p = cushion_up_cmd;
 		arg0 = twig_path;
 		commandname = arg0;
 		cmdloop(0);
 		popfile();
 	}
 	else if (strcmp(argv[1], "down")==0) {
- 		sprintf(twig_path, "%s/twigs/default.twig", home);
+ 		sprintf(twig_path, "%s/app.twig", home);
  		setinputfile(twig_path, INPUT_PUSH_FILE);
 		shellparam.nparam = 1;
-		shellparam.p = pillow_down_cmd;
+		shellparam.p = cushion_down_cmd;
 		arg0 = twig_path;
 		commandname = arg0;
 		cmdloop(0);
