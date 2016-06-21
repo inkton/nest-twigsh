@@ -13316,7 +13316,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	if (strcmp(argv[1], "home")==0) {
 		setpwd(home, 0);
 		chdir(home);
-	} else if (strcmp(argv[1], "up")==0) {
+	} else if (strcmp(argv[1], "start")==0) {
 		/* This aborts if file can't be opened, which is POSIXly correct.
 		 * bash returns exitcode 1 instead.
 		 */
@@ -13329,7 +13329,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		cmdloop(0);
 		popfile();
 	}
-	else if (strcmp(argv[1], "down")==0) {
+	else if (strcmp(argv[1], "stop")==0) {
  		sprintf(twig_path, "%s/app.twig", home);
  		setinputfile(twig_path, INPUT_PUSH_FILE);
 		shellparam.nparam = 1;
@@ -13339,44 +13339,39 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		cmdloop(0);
 		popfile();
 	}
-	else if (strcmp(argv[1], "sync")==0) {
-		if (strcmp(argv[2], "up")==0) {
-			options = collect_cmd_options(argv+3);
-			content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www";
+	else if (strcmp(argv[1], "upload")==0) {
+		options = collect_cmd_options(argv+3);
+		content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www";
 
-			if (!options) {
-				request = malloc(strlen(content));
-				strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress /var/www nest:/branch_a/a1.foon/www");
-			}
-			else {
-				request = malloc(strlen(content)+strlen(options));
-				sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www", options);
-			}
-
-			evalstring(request, 0);
-			free(request);
-			free(options);
-		}
-		else if (strcmp(argv[2], "down")==0) {
-			options = collect_cmd_options(argv+3);
-			content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www";
-
-			if (!options) {
-				request = malloc(strlen(content));
-				strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress nest:/branch_a/a1.foon/www /var/www");
-			}
-			else {
-				request = malloc(strlen(content)+strlen(options));
-				sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www", options);
-			}
-
-			evalstring(request, 0);
-			free(request);
-			free(options);
+		if (!options) {
+			request = malloc(strlen(content));
+			strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress /var/www nest:/branch_a/a1.foon/www");
 		}
 		else {
-			ash_msg_and_raise_error("Wrong sync option");
+			request = malloc(strlen(content)+strlen(options));
+			sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www", options);
 		}
+
+		evalstring(request, 0);
+		free(request);
+		free(options);
+	}
+	else if (strcmp(argv[2], "download")==0) {
+		options = collect_cmd_options(argv+3);
+		content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www";
+
+		if (!options) {
+			request = malloc(strlen(content));
+			strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress nest:/branch_a/a1.foon/www /var/www");
+		}
+		else {
+			request = malloc(strlen(content)+strlen(options));
+			sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www", options);
+		}
+
+		evalstring(request, 0);
+		free(request);
+		free(options);
 	}
 	else if (strcmp(argv[1], "remote")==0) {
 		if (strcmp(argv[2], "public_keys")==0) {
