@@ -13277,36 +13277,31 @@ int main(int argc, char **argv)
 }
 
 #if ENABLE_NEST
-static char*
-collect_cmd_options(char **argv)
-{
-	char *options = NULL;
-
-	for (int i=0;argv[i] != NULL;++i) {
-		if (argv[i][0] == '-' && argv[i][1] == '-') {
-			if (options) {
-				strcat(options, " ");
-				realloc(options, strlen(options) + strlen(argv[i]) + 1);
-				strcat(options, argv[i]);
-			}
-			else {
-				options = malloc(strlen(argv[i]) + 1);
-				strcpy(options, argv[i]);
-			}
-		}
-	}
-	
-	return options;
-}
 
 static int FAST_FUNC
 nestcmd(int argc UNUSED_PARAM, char **argv)
 {
-	char cread, *request, *options, *content;
-	long fsendsize = 0, fsize = 0, freqsize = 0;
-	int i, exitstatus = 0;
 	const char *home = lookupvar("NEST_HOME");
-	FILE *f = NULL;
+	char *request, *content;
+	const char *container_type = lookupvar("NEST_CONTAINER_TYPE");
+	const char *app_admin = lookupvar("NEST_APP_ADMIN");
+	const char *app_admin_uid = lookupvar("NEST_APP_ADMIN_UID");
+	char process_text[512];
+	int uid;
+	
+	uid = getuid();
+
+	//if (strcmp(container_type, "developer") != 0) {
+	//	sprintf(process_text, "Nest commands can be only run in development containers.");
+	//	ash_msg_and_raise_error(process_text);
+	//	return -1;
+	//}
+
+	if (uid != atoi(app_admin_uid)) {
+		sprintf(process_text, "Login as the nest admin %s to run nest commands.", app_admin);
+		ash_msg_and_raise_error(process_text);
+		return -1;
+	}
 
 	if (!home) {
 		home = "/var/app";
@@ -13316,64 +13311,40 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	if (strcmp(argv[1], "home")==0) {
 		setpwd(home, 0);
 		chdir(home);
-	} else if (strcmp(argv[1], "start")==0) {
-		/* This aborts if file can't be opened, which is POSIXly correct.
-		 * bash returns exitcode 1 instead.
-		 */
- 		sprintf(twig_path, "%s/app.twig", home);
-		setinputfile(twig_path, INPUT_PUSH_FILE);
-		shellparam.nparam = 1;
-		shellparam.p = cushion_up_cmd;
-		arg0 = twig_path;
-		commandname = arg0;
-		cmdloop(0);
-		popfile();
-	}
-	else if (strcmp(argv[1], "stop")==0) {
- 		sprintf(twig_path, "%s/app.twig", home);
- 		setinputfile(twig_path, INPUT_PUSH_FILE);
-		shellparam.nparam = 1;
-		shellparam.p = cushion_down_cmd;
-		arg0 = twig_path;
-		commandname = arg0;
-		cmdloop(0);
-		popfile();
+	} else if (
+		strcmp(argv[1], "create_cushion")==0 ||
+		strcmp(argv[1], "destroy_cushion")==0
+		) {
+		// needs root priviledges
+		sprintf(process_text, "NEST_OPERATION=%s sudo %s/app.twig", argv[1], home);
+		evalstring(process_text, 0);
+	} else if (
+		strcmp(argv[1], "install")==0 ||
+		strcmp(argv[1], "update")==0 ||
+		strcmp(argv[1], "upgrade")==0 ||
+		strcmp(argv[1], "remove")==0 ||
+		strcmp(argv[1], "info")==0 ||
+		strcmp(argv[1], "start")==0 ||
+		strcmp(argv[1], "stop")==0 ||
+		strcmp(argv[1], "daily")==0 ||
+		strcmp(argv[1], "change_db_password")==0 ||
+		strcmp(argv[1], "backup_db")==0 ||
+		strcmp(argv[1], "restore_db")==0 
+		) {
+		sprintf(process_text, "NEST_OPERATION=%s %s/app.twig", argv[1], home);
+		evalstring(process_text, 0);
 	}
 	else if (strcmp(argv[1], "upload")==0) {
-		options = collect_cmd_options(argv+3);
-		content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www";
-
-		if (!options) {
-			request = malloc(strlen(content));
-			strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress /var/www nest:/branch_a/a1.foon/www");
-		}
-		else {
-			request = malloc(strlen(content)+strlen(options));
-			sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s /var/www nest:/branch_a/a1.foon/www", options);
-		}
-
-		evalstring(request, 0);
-		free(request);
-		free(options);
+		sprintf(process_text, "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:%s", home, dirname(home));
+		evalstring(process_text, 0);
 	}
-	else if (strcmp(argv[2], "download")==0) {
-		options = collect_cmd_options(argv+3);
-		content = "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www";
-
-		if (!options) {
-			request = malloc(strlen(content));
-			strcpy(request, "/usr/bin/rsync -avzrh --timeout=30 --progress nest:/branch_a/a1.foon/www /var/www");
-		}
-		else {
-			request = malloc(strlen(content)+strlen(options));
-			sprintf(request, "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:/branch_a/a1.foon/www /var/www", options);
-		}
-
-		evalstring(request, 0);
-		free(request);
-		free(options);
+	else if (strcmp(argv[1], "download")==0) {
+		sprintf(process_text, "/usr/bin/rsync -avzrh --timeout=30 --progress nest:%s %s", home, dirname(home));
+		evalstring(process_text, 0);
 	}
 	else if (strcmp(argv[1], "remote")==0) {
+
+		/*
 		if (strcmp(argv[2], "public_keys")==0) {
 			if (strcmp(argv[3], "get")==0) {
 				request = "/usr/bin/ssh nest 'keeper { \"api_ver\": \"1.0\", \"subject\": \"public_keys\", \"operation\": \"get\", \"parameters\": { \"format\": \"display\" }}'";
@@ -13425,6 +13396,8 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		else {
 			ash_msg_and_raise_error("Wrong remote option");
 		}
+		*/
+		
 	}
 	else  {
 		ash_msg_and_raise_error("Wrong nest option");
