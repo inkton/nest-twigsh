@@ -13312,8 +13312,8 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		setpwd(home, 0);
 		chdir(home);
 	} else if (
-		strcmp(argv[1], "create_cushion")==0 ||
-		strcmp(argv[1], "destroy_cushion")==0
+		strcmp(argv[1], "initialise")==0 ||
+		strcmp(argv[1], "destroy")==0
 		) {
 		// needs root priviledges
 		sprintf(process_text, "NEST_OPERATION=%s sudo %s/app.twig", argv[1], home);
