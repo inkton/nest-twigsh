@@ -13291,11 +13291,11 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	
 	uid = getuid();
 
-	//if (strcmp(container_type, "developer") != 0) {
-	//	sprintf(process_text, "Nest commands can be only run in development containers.");
-	//	ash_msg_and_raise_error(process_text);
-	//	return -1;
-	//}
+	if (strcmp(container_type, "developer") != 0) {
+		sprintf(process_text, "Nest commands can be only run in development containers.");
+		ash_msg_and_raise_error(process_text);
+		return -1;
+	}
 
 	if (uid != atoi(app_admin_uid)) {
 		sprintf(process_text, "Login as the nest admin %s to run nest commands.", app_admin);
@@ -13316,7 +13316,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		strcmp(argv[1], "destroy_cushion")==0
 		) {
 		// needs root priviledges
-		sprintf(process_text, "NEST_OPERATION=%s sudo %s/app.twig", argv[1], home);
+		sprintf(process_text, "NEST_OPERATION=%s /usr/bin/sudo %s/app.twig", argv[1], home);
 		evalstring(process_text, 0);
 	} else if (
 		strcmp(argv[1], "install")==0 ||
@@ -13335,12 +13335,10 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		evalstring(process_text, 0);
 	}
 	else if (strcmp(argv[1], "upload")==0) {
-		sprintf(process_text, "/usr/bin/rsync -avzrh --timeout=30 --progress %s nest:%s", home, dirname(home));
-		evalstring(process_text, 0);
+		evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress /var/app nest:/var", 0);
 	}
 	else if (strcmp(argv[1], "download")==0) {
-		sprintf(process_text, "/usr/bin/rsync -avzrh --timeout=30 --progress nest:%s %s", home, dirname(home));
-		evalstring(process_text, 0);
+		evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress nest:/var/app /var", 0);
 	}
 	else if (strcmp(argv[1], "remote")==0) {
 
