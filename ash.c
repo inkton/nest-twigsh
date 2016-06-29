@@ -13312,20 +13312,13 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		setpwd(home, 0);
 		chdir(home);
 	} else if (
-		strcmp(argv[1], "initialise_cushion")==0 ||
-		strcmp(argv[1], "destroy_cushion")==0
-		) {
-		// needs root priviledges
-		sprintf(process_text, "NEST_OPERATION=%s /usr/bin/sudo %s/app.twig", argv[1], home);
-		evalstring(process_text, 0);
-	} else if (
 		strcmp(argv[1], "install")==0 ||
 		strcmp(argv[1], "update")==0 ||
 		strcmp(argv[1], "upgrade")==0 ||
 		strcmp(argv[1], "remove")==0 ||
 		strcmp(argv[1], "info")==0 ||
-		strcmp(argv[1], "start")==0 ||
-		strcmp(argv[1], "stop")==0 ||
+		strcmp(argv[1], "up")==0 ||
+		strcmp(argv[1], "down")==0 ||
 		strcmp(argv[1], "daily")==0 ||
 		strcmp(argv[1], "change_db_password")==0 ||
 		strcmp(argv[1], "backup_db")==0 ||
@@ -13334,11 +13327,11 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		sprintf(process_text, "NEST_OPERATION=%s %s/app.twig", argv[1], home);
 		evalstring(process_text, 0);
 	}
-	else if (strcmp(argv[1], "upload")==0) {
-		evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress /var/app nest:/var", 0);
+	else if (strcmp(argv[1], "push")==0) {
+		evalstring("/usr/bin/rsync -avzrh --exclude-from=/var/app/.push_excludes --timeout=30 --progress /var/app nest:/var", 0);
 	}
-	else if (strcmp(argv[1], "download")==0) {
-		evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress nest:/var/app /var", 0);
+	else if (strcmp(argv[1], "pull")==0) {
+		evalstring("/usr/bin/rsync -avzrh --exclude-from=/var/app/.pull_excludes --timeout=30 --progress nest:/var/app /var", 0);
 	}
 	else if (strcmp(argv[1], "remote")==0) {
 
