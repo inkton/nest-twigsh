@@ -13335,6 +13335,55 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	}
 	else if (strcmp(argv[1], "remote")==0) {
 
+		/* nest remote job [ list | [ submit [ install | update | upgrade | remove | info | daily ] ] ]
+		 * nest remote db [ password-update | backup | restore ]
+		 * nest remote domain [ add | remove ]
+		 * nest [ push | pull | up | down | install | update | upgrade | remove | info | daily ]
+		 * 
+		 * nester commands follow "remote" 
+		 */
+		
+		if (strcmp(argv[2], "job")==0) {
+
+			if (strcmp(argv[3], "submit") == 0 &&
+				(strcmp(argv[4], "install") == 0 ||
+				strcmp(argv[4], "update") == 0 ||
+				strcmp(argv[4], "upgrade") == 0 ||
+				strcmp(argv[4], "remove") == 0 ||
+				strcmp(argv[4], "info") == 0 ||
+				strcmp(argv[4], "daily") == 0 ) &&
+				argv[5] == NULL) {
+
+				sprintf(process_text, "ssh nest nester job submit %s", argv[4]);
+				evalstring(process_text, 0);
+				}
+			else if (strcmp(argv[3], "list") == 0 &&
+				argv[4] == NULL) {
+				evalstring("ssh nest nester job list", 0);
+				}
+		}
+		else if (strcmp(argv[2], "db")==0) {
+
+			if ((strcmp(argv[3], "password-update") == 0 ||
+				strcmp(argv[3], "backup") == 0 ||
+				strcmp(argv[3], "restore") == 0 ) &&
+				argv[4] == NULL) {
+
+				sprintf(process_text, "ssh nest nester db %s", argv[3]);
+				evalstring(process_text, 0);
+				}
+		}
+		else if (strcmp(argv[2], "domain")==0) {
+
+			if ((strcmp(argv[3], "add") == 0 ||
+				strcmp(argv[3], "remove") == 0 ) &&
+				argv[4] == NULL) {
+
+				sprintf(process_text, "ssh nest nester domain %s", argv[3]);
+				evalstring(process_text, 0);
+				}
+		}
+		
 		/*
 		if (strcmp(argv[2], "public_keys")==0) {
 			if (strcmp(argv[3], "get")==0) {
