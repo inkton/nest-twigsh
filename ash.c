@@ -13219,7 +13219,7 @@ int main(int argc, char **argv)
 	}
 	else if (minusg) {
 		setpwd(minusg, 0);
-		sprintf(twig_path, "%s/app.twig", minusg);
+		sprintf(twig_path, "%s/app.nest", minusg);
 		setinputfile(twig_path, 0);
 		shellparam.nparam = 1;
 		
@@ -13288,7 +13288,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	const char *app_admin_uid = lookupvar("NEST_APP_ADMIN_UID");
 	char process_text[512];
 	int uid;
-	
+
 	uid = getuid();
 
 	if (strcmp(container_type, "developer") != 0) {
@@ -13324,7 +13324,7 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		strcmp(argv[1], "backup_db")==0 ||
 		strcmp(argv[1], "restore_db")==0 
 		) {
-		sprintf(process_text, "NEST_OPERATION=%s %s/app.twig", argv[1], home);
+		sprintf(process_text, "NEST_OPERATION=%s %s/app.nest", argv[1], home);
 		evalstring(process_text, 0);
 	}
 	else if (strcmp(argv[1], "push")==0) {
