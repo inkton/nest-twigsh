@@ -13336,13 +13336,13 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 	else if (strcmp(argv[1], "remote")==0) {
 
 		/* nest remote job [ list | [ submit [ install | update | upgrade | remove | info | daily ] ] ]
-		 * nest remote db [ password-update | backup | restore ]
+		 * nest remote site [ password-update | backup | restore ]
 		 * nest remote domain [ add | remove ]
 		 * nest [ push | pull | up | down | install | update | upgrade | remove | info | daily ]
 		 * 
 		 * nester commands follow "remote" 
 		 */
-		
+
 		if (strcmp(argv[2], "job")==0) {
 
 			if (strcmp(argv[3], "submit") == 0 &&
@@ -13362,9 +13362,10 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 				evalstring("ssh nest nester job list", 0);
 				}
 		}
-		else if (strcmp(argv[2], "db")==0) {
+		else if (strcmp(argv[2], "site")==0) {
 
 			if ((strcmp(argv[3], "password-update") == 0 ||
+				strcmp(argv[3], "secure-access") == 0 ||
 				strcmp(argv[3], "backup") == 0 ||
 				strcmp(argv[3], "restore") == 0 ) &&
 				argv[4] == NULL) {
