@@ -29,7 +29,7 @@
  * debugging info will be written to ./trace and a quit signal
  * will generate a core dump.
  */
-#define DEBUG 2
+#define DEBUG 0
 /* Tweak debug output verbosity here */
 #define DEBUG_TIME 0
 #define DEBUG_PID 1
@@ -13327,11 +13327,23 @@ nestcmd(int argc UNUSED_PARAM, char **argv)
 		sprintf(process_text, "NEST_OPERATION=%s %s/app.nest", argv[1], home);
 		evalstring(process_text, 0);
 	}
+	else if (strcmp(argv[1], "db")==0) {
+		evalstring("source /usr/local/nest/utils/db && db_open_terminal", 0);
+	}
+	else if (strcmp(argv[1], "ssh")==0) {
+		evalstring("ssh nest", 0);
+	}
 	else if (strcmp(argv[1], "push")==0) {
 		evalstring("/usr/bin/rsync -avzrh --exclude-from=/var/app/.push_excludes --timeout=30 --progress /var/app nest:/var", 0);
 	}
 	else if (strcmp(argv[1], "pull")==0) {
-		evalstring("/usr/bin/rsync -avzrh --exclude-from=/var/app/.pull_excludes --timeout=30 --progress nest:/var/app /var", 0);
+		if (strcmp(argv[2], "nest-update") == 0) {
+			evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress nest:/usr/local/nest /usr/local", 0);
+		} else if (strcmp(argv[2], "wp-bundle") == 0) {
+			evalstring("/usr/bin/rsync -avzrh --timeout=30 --progress nest:/usr/local/share/nest/wp /usr/local/share/nest", 0);
+		} else {
+			evalstring("/usr/bin/rsync -avzrh --exclude-from=/var/app/.pull_excludes --timeout=30 --progress nest:/var/app /var", 0);
+		}
 	}
 	else if (strcmp(argv[1], "remote")==0) {
 
